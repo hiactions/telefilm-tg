@@ -1,21 +1,16 @@
-name: Build TON Proxy (rldp-http-proxy)
+name: Build TON Proxy & Generate Artifacts
 
 on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Install packages
+      - name: Install Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential git cmake ninja-build zlib1g-dev libsecp256k1-dev libmicrohttpd-dev libsodium-dev wget
@@ -26,12 +21,33 @@ jobs:
           chmod +x llvm.sh
           sudo ./llvm.sh 16 all
 
-      - name: Configure và build rldp-http-proxy
+      - name: Configure and Build rldp-http-proxy
         run: |
           mkdir build && cd build
           cmake -DCMAKE_BUILD_TYPE=Release ..
           cmake --build . --target rldp-http-proxy
 
-      - name: Listing build file has been created
+      - name: Generate ADNL Address File
         run: |
-          ls -lah build
+          # Ensure the generate-random-id tool is executable.
+          chmod +x utils/generate-random-id
+          # Run the tool and extract the second token (the user-friendly ADNL address).
+          ADNL_ADDR=$(./utils/generate-random-id -m adnlid | awk '{print $2}')
+          echo "$ADNL_ADDR" > adnl_address.txt
+          echo "Server ADNL Address: $ADNL_ADDR"
+
+      - name: Create HTML File with Hello World
+        run: |
+          echo '<html><body><h1>Hello World</h1></body></html>' > index.html
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ton-proxy-artifacts
+          path: |
+            build/rldp-http-proxy
+            adnl_address.txt
+            index.html
+
+      - name: List Generated Files
+        run: ls -lah
