@@ -1,14 +1,5 @@
-# This workflow generates the necessary files for setting up a TON DNS webpage.
-# It creates an index.html file with "Hello World" and a dns-config.xml file
-# with a placeholder ADNL address. After running this workflow, you need to
-# deploy the index.html to a TON Site, obtain the actual ADNL address, update
-# the dns-config.xml with that address, and apply it to TON DNS to display the
-# webpage at telefilm-tg.ton.
-
 name: Generate TON DNS Config
-
 on: workflow_dispatch
-
 jobs:
   generate:
     runs-on: ubuntu-latest
@@ -18,10 +9,13 @@ jobs:
 
       - name: Create Files
         run: |
-          # Generate a random 256-bit ADNL address (64-character hex string)
+          DOMAIN="telefilm-tg.ton"
+          if [ -z "$DOMAIN" ]; then
+            DOMAIN="telefilm-tg.ton"
+          fi
+          
           ADNL=$(openssl rand -hex 32)
           
-          # Create index.html with "Hello World"
           echo '<!DOCTYPE html>' > index.html
           echo '<html>' >> index.html
           echo '<head>' >> index.html
@@ -32,16 +26,15 @@ jobs:
           echo '</body>' >> index.html
           echo '</html>' >> index.html
           
-          # Create dns-config.xml with domain and ADNL address
           echo '<dns-config>' > dns-config.xml
-          echo '  <domain>telefilm-tg.ton</domain>' >> dns-config.xml
+          echo "  <domain>$DOMAIN</domain>" >> dns-config.xml
           echo "  <adnl>$ADNL</adnl>" >> dns-config.xml
           echo '</dns-config>' >> dns-config.xml
 
       - name: Commit Files to Repository
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          git config --local user.email "${{ vars.EMAIL }}"
+          git config --local user.name "hiactions"
           git add dns-config.xml index.html
           git commit -m "Add generated files for TON DNS"
           git push
