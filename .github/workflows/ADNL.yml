@@ -1,5 +1,7 @@
 name: Generate TON DNS Config
 on: workflow_dispatch
+permissions:
+          contents: write
 jobs:
   generate:
     runs-on: ubuntu-latest
@@ -33,7 +35,7 @@ jobs:
 
       - name: Commit Files to Repository
         run: |
-          git config --global user.email "${{ vars.EMAIL }}"
+          git config --global user.email "ntm09112012@gmail.com"
           git config --global user.name "HiPlatform Actions CI/CD"
           git add dns-config.xml index.html
           git commit -m "Add generated files for TON DNS"
