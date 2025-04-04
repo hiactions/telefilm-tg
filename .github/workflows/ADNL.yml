@@ -1,53 +1,47 @@
-name: Build TON Proxy & Generate Artifacts
+name: Build TON DNS Website
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install Dependencies
+      - name: Generate dns-config.xml
         run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential git cmake ninja-build zlib1g-dev libsecp256k1-dev libmicrohttpd-dev libsodium-dev wget
+          cat << 'EOF' > dns-config.xml
+          <?xml version="1.0" encoding="UTF-8"?>
+          <dns-config>
+            <domain>telefilm-tg.ton</domain>
+            <adnl>ADNL</adnl>
+          </dns-config>
+          EOF
 
-      - name: Install LLVM 16
+      - name: Generate index.html
         run: |
-          wget https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          sudo ./llvm.sh 16 all
+          cat << 'EOF' > index.html
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <title>Hello World</title>
+          </head>
+          <body>
+            <h1>Hello World</h1>
+          </body>
+          </html>
+          EOF
 
-      - name: Configure and Build rldp-http-proxy
-        run: |
-          mkdir build && cd build
-          cmake -DCMAKE_BUILD_TYPE=Release ..
-          cmake --build . --target rldp-http-proxy
-
-      - name: Generate ADNL Address File
-        run: |
-          # Ensure the generate-random-id tool is executable.
-          chmod +x utils/generate-random-id
-          # Run the tool and extract the second token (the user-friendly ADNL address).
-          ADNL_ADDR=$(./utils/generate-random-id -m adnlid | awk '{print $2}')
-          echo "$ADNL_ADDR" > adnl_address.txt
-          echo "Server ADNL Address: $ADNL_ADDR"
-
-      - name: Create HTML File with Hello World
-        run: |
-          echo '<html><body><h1>Hello World</h1></body></html>' > index.html
-
-      - name: Upload Artifacts
+      - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: ton-proxy-artifacts
+          name: website-files
           path: |
-            build/rldp-http-proxy
-            adnl_address.txt
+            dns-config.xml
             index.html
-
-      - name: List Generated Files
-        run: ls -lah
