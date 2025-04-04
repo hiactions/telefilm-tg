@@ -33,8 +33,8 @@ jobs:
 
       - name: Commit Files to Repository
         run: |
-          git config --local user.email "${{ vars.EMAIL }}"
-          git config --local user.name "hiactions"
+          git config --global user.email "${{ vars.EMAIL }}"
+          git config --global user.name "HiPlatform Actions CI/CD"
           git add dns-config.xml index.html
           git commit -m "Add generated files for TON DNS"
           git push
