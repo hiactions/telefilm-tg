@@ -1,47 +1,47 @@
-name: Build TON DNS Website
+# This workflow generates the necessary files for setting up a TON DNS webpage.
+# It creates an index.html file with "Hello World" and a dns-config.xml file
+# with a placeholder ADNL address. After running this workflow, you need to
+# deploy the index.html to a TON Site, obtain the actual ADNL address, update
+# the dns-config.xml with that address, and apply it to TON DNS to display the
+# webpage at telefilm-tg.ton.
 
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+name: Generate TON DNS Config
+
+on: workflow_dispatch
 
 jobs:
-  build:
+  generate:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - name: Generate dns-config.xml
+      - name: Create Files
         run: |
-          cat << 'EOF' > dns-config.xml
-          <?xml version="1.0" encoding="UTF-8"?>
-          <dns-config>
-            <domain>telefilm-tg.ton</domain>
-            <adnl>ADNL</adnl>
-          </dns-config>
-          EOF
+          # Generate a random 256-bit ADNL address (64-character hex string)
+          ADNL=$(openssl rand -hex 32)
+          
+          # Create index.html with "Hello World"
+          echo '<!DOCTYPE html>' > index.html
+          echo '<html>' >> index.html
+          echo '<head>' >> index.html
+          echo '  <title>Hello World</title>' >> index.html
+          echo '</head>' >> index.html
+          echo '<body>' >> index.html
+          echo '  <h1>Hello World</h1>' >> index.html
+          echo '</body>' >> index.html
+          echo '</html>' >> index.html
+          
+          # Create dns-config.xml with domain and ADNL address
+          echo '<dns-config>' > dns-config.xml
+          echo '  <domain>telefilm-tg.ton</domain>' >> dns-config.xml
+          echo "  <adnl>$ADNL</adnl>" >> dns-config.xml
+          echo '</dns-config>' >> dns-config.xml
 
-      - name: Generate index.html
+      - name: Commit Files to Repository
         run: |
-          cat << 'EOF' > index.html
-          <!DOCTYPE html>
-          <html lang="en">
-          <head>
-            <meta charset="UTF-8">
-            <title>Hello World</title>
-          </head>
-          <body>
-            <h1>Hello World</h1>
-          </body>
-          </html>
-          EOF
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: website-files
-          path: |
-            dns-config.xml
-            index.html
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add dns-config.xml index.html
+          git commit -m "Add generated files for TON DNS"
+          git push
